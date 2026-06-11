@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual IA · Monitoreo y Cumplimiento Normativo</title>
+<style>
+/* ============================================================
+   TOKENS & RESET
+   ============================================================ */
+:root{
+  --bg:#F5F7FB; --surface:#FFFFFF; --surface2:#F0F4FA;
+  --border:#DDE3EE; --border2:#C8D2E6;
+  --accent:#1B3F8B; --accent2:#2D6BE4; --accent-light:#E6F1FB;
+  --teal:#0D7E6A; --teal-light:#EAF5F2;
+  --amber:#B07A10; --amber-light:#FDF3DC;
+  --coral:#C94225; --coral-light:#FAECE7;
+  --purple:#5A36A0; --purple-light:#EEEDFE;
+  --green:#2E6B12; --green-light:#EAF3DE;
+  --text:#1C2333; --text2:#4A5568; --text3:#8A93A6;
+  --radius:10px; --radius-lg:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --sidebar-w:240px;
+  --header-h:56px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--font);cursor:pointer}
+input,textarea{font-family:var(--font)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+#app{display:flex;min-height:100vh;flex-direction:column}
+
+/* Header */
+#header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;padding:0 1.25rem;
+  z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.18);
+  gap:12px;
+}
+#header .logo{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+#header .logo span{opacity:.7;font-weight:400;font-size:13px}
+#header .spacer{flex:1}
+#header .meta{font-size:11px;opacity:.6;display:flex;align-items:center;gap:6px}
+#menu-toggle{background:none;border:none;color:#fff;font-size:20px;padding:4px;display:none}
+#admin-btn{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:4px 12px;border-radius:6px;font-size:12px;
+  transition:.15s;
+}
+#admin-btn:hover{background:rgba(255,255,255,.25)}
+
+/* Sidebar */
+#sidebar{
+  position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);
+  background:var(--surface);border-right:1px solid var(--border);
+  overflow-y:auto;padding:1rem 0;z-index:90;
+  transition:transform .25s ease;
+}
+.nav-section-title{
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--text3);padding:.75rem 1.25rem .3rem;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:.5rem 1.25rem;cursor:pointer;
+  border-left:3px solid transparent;transition:.15s;
+  font-size:13px;color:var(--text2);
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{
+  background:var(--accent-light);color:var(--accent2);
+  border-left-color:var(--accent2);font-weight:500;
+}
+.nav-item .ni-icon{font-size:16px;min-width:20px;text-align:center}
+.nav-badge{
+  margin-left:auto;font-size:10px;padding:1px 6px;
+  border-radius:10px;background:var(--coral-light);color:var(--coral);font-weight:500;
+}
+.nav-badge.ok{background:var(--green-light);color:var(--green)}
+
+/* Main content */
+#content{
+  margin-left:var(--sidebar-w);margin-top:var(--header-h);
+  padding:2rem;min-height:calc(100vh - var(--header-h));
+  max-width:960px;
+}
+.page-section{display:none}
+.page-section.active{display:block}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+.page-header{margin-bottom:1.5rem}
+.page-header h1{font-size:20px;font-weight:600;margin-bottom:.25rem}
+.page-header p{font-size:13px;color:var(--text2)}
+.page-header .ph-meta{
+  display:flex;gap:.75rem;margin-top:.5rem;flex-wrap:wrap;
+}
+.ph-tag{
+  font-size:11px;padding:2px 8px;border-radius:4px;
+  background:var(--surface2);color:var(--text3);
+  border:1px solid var(--border);
+}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:1.25rem}
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.125rem;
+  transition:.15s;
+}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border2)}
+.card-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:.625rem}
+.card h3{font-size:13px;font-weight:600;margin-bottom:.3rem}
+.card p{font-size:12px;color:var(--text2);line-height:1.55}
+.card .card-footer{margin-top:.625rem;display:flex;gap:6px;flex-wrap:wrap}
+
+.badge{
+  display:inline-block;font-size:10px;font-weight:600;
+  padding:2px 7px;border-radius:4px;
+}
+.badge-critical{background:#FCEBEB;color:#791F1F}
+.badge-high{background:#FAEEDA;color:#633806}
+.badge-medium{background:#EAF3DE;color:#27500A}
+.badge-low{background:#E6F1FB;color:#0C447C}
+.badge-info{background:var(--purple-light);color:var(--purple)}
+
+/* Alert banner */
+.alert{
+  padding:.75rem 1rem;border-radius:var(--radius);margin-bottom:1rem;
+  display:flex;gap:.75rem;align-items:flex-start;
+}
+.alert .alert-icon{font-size:16px;margin-top:1px}
+.alert h4{font-size:13px;font-weight:600;margin-bottom:.2rem}
+.alert p{font-size:12px;line-height:1.5}
+.alert-ok{background:var(--teal-light);border:1px solid #9FE1CB}
+.alert-warn{background:var(--amber-light);border:1px solid #FAC775}
+.alert-danger{background:var(--coral-light);border:1px solid #F5C4B3}
+.alert-info{background:var(--accent-light);border:1px solid #B5D4F4}
+
+/* Section title */
+.section-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text3);margin:1.25rem 0 .625rem;
+  padding-bottom:.375rem;border-bottom:1px solid var(--border);
+}
+
+/* Indicators */
+.indicator-list{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem}
+.ind-row{
+  display:grid;grid-template-columns:1fr 60px;
+  align-items:center;gap:8px;
+  padding:.75rem 1rem;border-bottom:1px solid var(--border);
+}
+.ind-row:last-child{border:none}
+.ind-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.ind-desc{font-size:11px;color:var(--text3)}
+.ind-bar-wrap{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:5px;width:100%}
+.ind-bar{height:100%;border-radius:3px}
+.ind-value{font-size:15px;font-weight:600;text-align:right}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:.875rem;text-align:center;
+}
+.stat-box .sv{font-size:24px;font-weight:600}
+.stat-box .sl{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* Accordion / Playbook */
+.accordion{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.acc-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+}
+.acc-head{
+  display:flex;align-items:center;gap:10px;padding:.75rem 1rem;
+  cursor:pointer;transition:.15s;
+}
+.acc-head:hover{background:var(--surface2)}
+.acc-head .ah-icon{font-size:18px}
+.acc-head h3{font-size:13px;font-weight:600;flex:1}
+.acc-head .ah-badge{font-size:10px;padding:2px 7px;border-radius:4px;margin-right:4px}
+.acc-arrow{color:var(--text3);transition:.2s;font-size:12px}
+.acc-item.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{
+  display:none;padding:.875rem 1rem;
+  font-size:13px;line-height:1.7;color:var(--text2);
+  border-top:1px solid var(--border);
+}
+.acc-item.open .acc-body{display:block}
+.acc-step{display:flex;gap:10px;margin-bottom:.75rem}
+.acc-step-num{
+  min-width:22px;height:22px;border-radius:50%;
+  background:var(--accent2);color:#fff;
+  font-size:10px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.acc-step-body h5{font-size:12px;font-weight:600;margin-bottom:2px;color:var(--text)}
+.acc-step-body p{font-size:12px;color:var(--text2)}
+.acc-legal{
+  margin-top:.75rem;padding:.5rem .75rem;
+  background:var(--surface2);border-radius:6px;font-size:11px;color:var(--text3);
+}
+
+/* Tools grid */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.25rem}
+.tool-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:.875rem;
+}
+.tool-card .tc-icon{font-size:22px;margin-bottom:.4rem}
+.tool-card h4{font-size:13px;font-weight:600;margin-bottom:3px}
+.tool-card p{font-size:11px;color:var(--text2);line-height:1.4}
+.tool-tag{font-size:10px;padding:2px 6px;border-radius:3px;margin-top:5px;display:inline-block;font-weight:500}
+.tag-oss{background:var(--green-light);color:var(--green)}
+.tag-saas{background:var(--accent-light);color:var(--accent)}
+.tag-ent{background:var(--purple-light);color:var(--purple)}
+.tag-std{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+
+/* Regulatory map */
+.reg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:1.25rem}
+.reg-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:.875rem;
+}
+.reg-card .rc-flag{font-size:26px;margin-bottom:.4rem}
+.reg-card h4{font-size:13px;font-weight:600;margin-bottom:3px}
+.reg-card p{font-size:11px;color:var(--text2);line-height:1.4}
+.reg-level{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;display:inline-block;margin-top:5px}
+
+/* Checklist */
+.checklist-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem}
+.cl-progress-bar{height:6px;background:var(--surface2);border-radius:3px;margin:.5rem 0 1rem;overflow:hidden}
+.cl-progress-fill{height:100%;border-radius:3px;background:var(--accent2);transition:width .5s ease}
+.cl-category{
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--text3);margin:.75rem 0 .375rem;
+}
+.cl-category:first-child{margin-top:0}
+.cl-item{
+  display:flex;align-items:flex-start;gap:8px;padding:.5rem .625rem;
+  border-radius:6px;cursor:pointer;transition:.15s;
+}
+.cl-item:hover{background:var(--surface2)}
+.cl-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent2);min-width:14px}
+.cl-item label{cursor:pointer;font-size:12px;line-height:1.5;flex:1}
+.cl-item.checked label{text-decoration:line-through;color:var(--text3)}
+
+/* Heatmap */
+.heatmap-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;overflow-x:auto}
+.heatmap{display:grid;gap:4px}
+.hm-cell{
+  padding:8px 6px;border-radius:5px;
+  font-size:11px;font-weight:600;text-align:center;
+}
+.hm-label{font-size:11px;color:var(--text3);display:flex;align-items:center;font-weight:500}
+.hm-header{font-size:10px;color:var(--text3);font-weight:600;text-align:center;padding:4px}
+.hm-0{background:#EEF2FA;color:#3D5A80}
+.hm-1{background:#BFD4F5;color:#1B3F8B}
+.hm-2{background:#7AADF0;color:#0A1F5C}
+.hm-3{background:#E85D24;color:#fff}
+.hm-4{background:#A82900;color:#fff}
+
+/* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+#admin-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:200;display:none;align-items:flex-end;justify-content:center;
+}
+#admin-overlay.open{display:flex}
+#admin-panel{
+  background:var(--surface);width:100%;max-width:720px;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  max-height:90vh;overflow-y:auto;
+  padding:1.5rem;box-shadow:var(--shadow-md);
+}
+#admin-panel h2{font-size:16px;font-weight:600;margin-bottom:.25rem}
+#admin-panel .ap-sub{font-size:12px;color:var(--text3);margin-bottom:1.25rem}
+.ap-tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.ap-tab{
+  padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;
+  border:1px solid var(--border);background:transparent;color:var(--text2);
+  cursor:pointer;transition:.15s;
+}
+.ap-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.ap-page{display:none}.ap-page.active{display:block}
+.form-group{margin-bottom:.875rem}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:.3rem}
+.form-group input,
+.form-group textarea,
+.form-group select{
+  width:100%;padding:7px 10px;border:1px solid var(--border2);
+  border-radius:6px;font-size:13px;background:var(--surface);
+  color:var(--text);outline:none;transition:.15s;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(45,107,228,.12)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ap-list{display:flex;flex-direction:column;gap:6px;margin-bottom:.875rem}
+.ap-list-item{
+  display:flex;align-items:center;gap:8px;padding:.5rem .75rem;
+  background:var(--surface2);border-radius:6px;border:1px solid var(--border);
+}
+.ap-list-item span{flex:1;font-size:13px}
+.ap-list-item button{
+  background:none;border:none;color:var(--text3);font-size:14px;
+  padding:2px 6px;border-radius:4px;transition:.15s;
+}
+.ap-list-item button:hover{background:var(--coral-light);color:var(--coral)}
+.btn{
+  padding:7px 16px;border-radius:6px;font-size:13px;font-weight:500;
+  border:none;transition:.15s;cursor:pointer;
+}
+.btn-primary{background:var(--accent2);color:#fff}
+.btn-primary:hover{background:#1A5CC8}
+.btn-secondary{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-secondary:hover{background:var(--surface2)}
+.btn-danger{background:var(--coral-light);color:var(--coral);border:1px solid #F5C4B3}
+.ap-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--border)}
+.ap-info{
+  background:var(--accent-light);border:1px solid #B5D4F4;
+  border-radius:6px;padding:.625rem .875rem;
+  font-size:12px;color:var(--accent);line-height:1.5;
+  margin-bottom:1rem;
+}
+.json-editor{
+  width:100%;min-height:260px;padding:.75rem;
+  border:1px solid var(--border2);border-radius:6px;
+  font-family:monospace;font-size:12px;line-height:1.6;
+  background:#F8F9FC;color:var(--text);resize:vertical;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #content{margin-left:0}
+  #menu-toggle{display:block}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <button id="menu-toggle" onclick="toggleSidebar()" aria-label="Menú">☰</button>
+    <div class="logo">
+      🛡️ <strong>ComplianceIA</strong>
+      <span>· Monitoreo Normativo</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="meta" id="header-meta">Cargando...</div>
+    <button id="admin-btn" onclick="openAdmin()">⚙️ Administrar</button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div id="nav-container"></div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="content">
+    <div id="sections-container"></div>
+  </main>
+
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-overlay" onclick="closeAdminOutside(event)">
+  <div id="admin-panel">
+    <h2>⚙️ Panel de administración</h2>
+    <p class="ap-sub">Actualiza el contenido sin tocar el código. Los cambios se aplican de inmediato.</p>
+    <div class="ap-tabs" id="ap-tabs"></div>
+    <div id="ap-pages"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONFIGURACIÓN DE CONTENIDO
+     👇 ESTE ES EL ÚNICO LUGAR QUE NECESITA EDITAR EL ADMINISTRADOR
+     ============================================================ -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   CONFIG — Toda la información de la app vive aquí.
+   Para añadir/editar/eliminar contenido solo modifica este objeto.
+   El motor renderiza automáticamente lo que encuentres.
+   ─────────────────────────────────────────────────────────────  */
+const CONFIG = {
+
+  app: {
+    title: "ComplianceIA",
+    subtitle: "Manual de Monitoreo y Cumplimiento Normativo con IA",
+    version: "v2.0",
+    lastUpdate: "Junio 2026",
+    org: "Colpensiones / LIONTECH"
+  },
+
+  /* ── MÓDULOS DE NAVEGACIÓN ──────────────────────────────────
+     Cada módulo genera automáticamente:
+       - Un ítem en el sidebar
+       - Una sección de contenido
+     type puede ser: "regulatory", "risks", "indicators",
+                     "playbooks", "tools", "checklist", "custom"
+  ──────────────────────────────────────────────────────────── */
+  modules: [
+    {
+      id: "marco",
+      icon: "🗺️",
+      label: "Marco normativo",
+      type: "regulatory",
+      description: "Panorama regulatorio global de IA 2025–2026"
+    },
+    {
+      id: "riesgos",
+      icon: "⚠️",
+      label: "Matriz de riesgos",
+      type: "risks",
+      description: "Clasificación y priorización de riesgos IA",
+      badge: "6 activos",
+      badgeType: "danger"
+    },
+    {
+      id: "indicadores",
+      icon: "📊",
+      label: "KPIs de cumplimiento",
+      type: "indicators",
+      description: "Indicadores clave de monitoreo"
+    },
+    {
+      id: "playbook",
+      icon: "📋",
+      label: "Playbooks",
+      type: "playbooks",
+      description: "Protocolos de respuesta a incidentes"
+    },
+    {
+      id: "herramientas",
+      icon: "🔧",
+      label: "Herramientas",
+      type: "tools",
+      description: "Stack técnico recomendado"
+    },
+    {
+      id: "checklist",
+      icon: "✅",
+      label: "Checklist",
+      type: "checklist",
+      description: "Auditoría interna de controles"
+    }
+  ],
+
+  /* ── DATOS DE CADA MÓDULO ──────────────────────────────────── */
+
+  /* Módulo: Marco Normativo */
+  regulatory: {
+    alert: {
+      type: "ok",
+      title: "Estado de regulación LATAM",
+      text: "Colombia lidera con la Política de IA (CONPES 3975) y avanza en regulación sectorial. El ecosistema normativo exige monitoreo continuo de sistemas IA en entidades del Estado."
+    },
+    frameworks: [
+      {
+        flag: "🇪🇺", name: "EU AI Act",
+        description: "Reglamento obligatorio. Categoriza IA por nivel de riesgo. Vigente 2024.",
+        level: "Vinculante", levelColor: "#27500A", levelBg: "#C0DD97"
+      },
+      {
+        flag: "🇨🇴", name: "Colombia CONPES 3975",
+        description: "Política Nacional de IA. Lineamientos sectoriales. Decreto reglamentario en curso.",
+        level: "En evolución", levelColor: "#0C447C", levelBg: "#B5D4F4"
+      },
+      {
+        flag: "🇧🇷", name: "Brasil PL 2338",
+        description: "Proyecto de Ley IA aprobado en Senado. Regulación de riesgo y transparencia.",
+        level: "En trámite", levelColor: "#633806", levelBg: "#FAC775"
+      },
+      {
+        flag: "🌐", name: "UNESCO Recomendación",
+        description: "Marco ético global. Transparencia, equidad, rendición de cuentas IA.",
+        level: "Soft law", levelColor: "#3C3489", levelBg: "#CECBF6"
+      },
+      {
+        flag: "🇺🇸", name: "NIST AI RMF",
+        description: "Marco de gestión de riesgos IA. Estándar técnico de referencia.",
+        level: "Referencia", levelColor: "#444441", levelBg: "#D3D1C7"
+      },
+      {
+        flag: "🏛️", name: "Colpensiones Interno",
+        description: "MIPG, Código Ético, SGC, Ley 2381/2024. Marco de gobierno interno IA.",
+        level: "Institucional", levelColor: "#712B13", levelBg: "#F5C4B3"
+      }
+    ],
+    dimensions: [
+      {
+        icon: "👁️", iconBg: "#E6F1FB",
+        title: "Transparencia",
+        text: "Explicabilidad de modelos, registro de decisiones automatizadas, trazabilidad de datos de entrenamiento y auditoría de outputs."
+      },
+      {
+        icon: "🛡️", iconBg: "#EAF3DE",
+        title: "Gestión de riesgos",
+        text: "Clasificación de sistemas IA por nivel de riesgo, controles preventivos, planes de contingencia y evaluación de impacto."
+      },
+      {
+        icon: "⚖️", iconBg: "#EEEDFE",
+        title: "Equidad algorítmica",
+        text: "Detección de sesgos, métricas de fairness por población, pruebas de disparate impact y monitoreo continuo de outputs."
+      },
+      {
+        icon: "🔐", iconBg: "#FAEEDA",
+        title: "Seguridad de datos",
+        text: "Protección de datos personales en flujos IA, cumplimiento Habeas Data, cifrado de modelos, gestión de accesos."
+      }
+    ]
+  },
+
+  /* Módulo: Riesgos */
+  risks: {
+    alert: {
+      type: "warn",
+      title: "Enfoque: Riesgos en IA para pensiones y seguridad social",
+      text: "Los sistemas de alto impacto como los usados en Colpensiones requieren evaluación exhaustiva. Cruza probabilidad × impacto para priorizar controles."
+    },
+    /* Heatmap: filas=probabilidad, cols=impacto */
+    heatmap: {
+      cols: ["Muy bajo","Bajo","Medio","Alto","Crítico"],
+      rows: [
+        { label: "Casi seguro", cells: ["hm-1","hm-2","hm-3","hm-4","hm-4"] },
+        { label: "Probable",    cells: ["hm-0","hm-1","hm-2","hm-3","hm-4"] },
+        { label: "Posible",     cells: ["hm-0","hm-1","hm-2","hm-2","hm-3"] },
+        { label: "Improbable",  cells: ["hm-0","hm-0","hm-1","hm-2","hm-2"] },
+        { label: "Raro",        cells: ["hm-0","hm-0","hm-0","hm-1","hm-1"] }
+      ]
+    },
+    items: [
+      {
+        badge: "critical", badgeLabel: "Crítico",
+        title: "Sesgo en resoluciones automatizadas",
+        text: "Discriminación algorítmica en reconocimiento de derechos pensionales. Afecta directamente a poblaciones vulnerables."
+      },
+      {
+        badge: "critical", badgeLabel: "Crítico",
+        title: "Fuga de datos sensibles",
+        text: "Exposición de información personal en modelos de lenguaje o sistemas de OCR sin controles de privacidad diferencial."
+      },
+      {
+        badge: "high", badgeLabel: "Alto",
+        title: "Opacidad en decisiones",
+        text: "Imposibilidad de explicar resoluciones a ciudadanos o entes de control. Incumple principios de transparencia MIPG."
+      },
+      {
+        badge: "high", badgeLabel: "Alto",
+        title: "Dependencia de proveedor IA",
+        text: "Lock-in tecnológico sin auditoría del modelo subyacente. Riesgo de continuidad del servicio y captura regulatoria."
+      },
+      {
+        badge: "medium", badgeLabel: "Medio",
+        title: "Degradación del modelo (drift)",
+        text: "Drift estadístico en producción no detectado. El modelo pierde precisión sin alertas tempranas configuradas."
+      },
+      {
+        badge: "low", badgeLabel: "Monitoreo",
+        title: "Alucinaciones en asistentes IA",
+        text: "Información incorrecta sobre beneficios entregada a ciudadanos mediante chatbots sin supervisión humana."
+      }
+    ]
+  },
+
+  /* Módulo: Indicadores KPI */
+  indicators: {
+    stats: [
+      { value: "94%", label: "Cumplimiento general" },
+      { value: "3",   label: "Alertas activas" },
+      { value: "12d", label: "Último audit" },
+      { value: "16",  label: "Controles activos" }
+    ],
+    alerts: [
+      {
+        type: "danger",
+        title: "Alerta: HiL Rate por debajo del umbral (mín. 80%)",
+        text: "El porcentaje de supervisión humana en decisiones críticas está en 55%. Se recomienda activar el playbook de revisión de gobernanza IA."
+      }
+    ],
+    items: [
+      {
+        name: "Explicabilidad del modelo (XAI score)",
+        desc: "% de decisiones con justificación documentada",
+        value: "78%", numericValue: 78, color: "#185FA5", status: "ok"
+      },
+      {
+        name: "Equidad algorítmica (Fairness ratio)",
+        desc: "Paridad entre grupos demográficos en outputs",
+        value: "91%", numericValue: 91, color: "#0D7E6A", status: "ok"
+      },
+      {
+        name: "Data lineage completeness",
+        desc: "Trazabilidad completa del flujo de datos de entrada",
+        value: "65%", numericValue: 65, color: "#D4A017", status: "warn"
+      },
+      {
+        name: "Model drift index (MDI)",
+        desc: "Estabilidad estadística del modelo en producción",
+        value: "87%", numericValue: 87, color: "#185FA5", status: "ok"
+      },
+      {
+        name: "Incidentes de privacidad IA (IPI)",
+        desc: "Incidentes reportados vs. total interacciones",
+        value: "0.03%", numericValue: 97, color: "#0D7E6A", status: "ok"
+      },
+      {
+        name: "Supervisión humana efectiva (HiL rate)",
+        desc: "Decisiones de alto impacto con revisión humana",
+        value: "55%", numericValue: 55, color: "#C94225", status: "danger"
+      }
+    ]
+  },
+
+  /* Módulo: Playbooks */
+  playbooks: {
+    items: [
+      {
+        icon: "🔴", badge: "Crítico",
+        title: "Sesgo detectado en modelo de producción",
+        steps: [
+          {
+            title: "Contención (0–2h)",
+            detail: "Suspender o limitar el sistema afectado. Activar modo de supervisión humana completa. Documentar outputs afectados y versión del modelo."
+          },
+          {
+            title: "Análisis (2–24h)",
+            detail: "Ejecutar pruebas de fairness (disparate impact ratio, equal opportunity). Identificar subgrupos afectados. Cuantificar volumen de decisiones comprometidas."
+          },
+          {
+            title: "Notificación (24–48h)",
+            detail: "Informar a Comité de Ética IA, Jefe de Control Interno y Oficial de Protección de Datos. Si hay afectación a ciudadanos: activar protocolo de comunicación pública."
+          },
+          {
+            title: "Remediación (48h–30 días)",
+            detail: "Re-entrenamiento con datos balanceados, ajuste de umbrales de decisión, auditoría de datos históricos. Validar con pruebas A/B antes del redeployment."
+          }
+        ],
+        legal: "EU AI Act Art. 9 · NIST AI RMF GOVERN 1.2 · Código Ético Colpensiones"
+      },
+      {
+        icon: "🟠", badge: "Derecho ciudadano",
+        title: "Solicitud de explicación algorítmica (XAI)",
+        steps: [
+          {
+            title: "Identificación",
+            detail: "Localizar ID de transacción y versión del modelo vigente al momento de la decisión en el model registry."
+          },
+          {
+            title: "Generación del reporte",
+            detail: "Ejecutar análisis SHAP/LIME con las variables de mayor peso. Producir salida técnica con ranking de factores decisorios."
+          },
+          {
+            title: "Traducción narrativa",
+            detail: "Convertir output técnico a lenguaje comprensible para el ciudadano o ente de control. Usar plantilla de respuesta oficial."
+          },
+          {
+            title: "Respuesta formal",
+            detail: "Emitir respuesta dentro de los 15 días hábiles. Registrar en sistema de PQRS y en bitácora de transparencia algorítmica."
+          }
+        ],
+        legal: "Derecho de explicación · GDPR Art. 22 · Habeas Data Colombia · EU AI Act Art. 13"
+      },
+      {
+        icon: "🟡", badge: "Técnico",
+        title: "Model drift fuera de umbral",
+        steps: [
+          {
+            title: "Activación de alerta",
+            detail: "Indicadores: PSI > 0.2, KS > 0.3, degradación F1 > 5pp respecto a baseline. Activar modelo fallback si existe."
+          },
+          {
+            title: "Diagnóstico del drift",
+            detail: "Determinar si es data drift (cambio en distribución de entradas) o concept drift (cambio en relación input-output)."
+          },
+          {
+            title: "Decisión de remediación",
+            detail: "Evaluar: re-entrenamiento incremental vs. re-entrenamiento completo según magnitud del drift y disponibilidad de datos."
+          },
+          {
+            title: "Validación y redeployment",
+            detail: "Ciclo de validación completo, aprobación del Comité Técnico IA, deployment controlado con rollback plan activo."
+          }
+        ],
+        legal: "NIST AI RMF MANAGE 2.2 · ISO/IEC 42001 cláusula 9"
+      },
+      {
+        icon: "🔵", badge: "Auditoría",
+        title: "Auditoría regulatoria de sistema IA",
+        steps: [
+          {
+            title: "Documentación mínima",
+            detail: "Ficha técnica del modelo, propósito y casos de uso aprobados, matriz de riesgos, evaluación de impacto en derechos (DPIA/EIPD)."
+          },
+          {
+            title: "Evidencia de controles",
+            detail: "Logs de decisiones automatizadas (mín. 12 meses), evidencia de supervisión humana, resultados de pruebas de fairness y drift."
+          },
+          {
+            title: "Plan de contingencia",
+            detail: "Protocolo documentado de desactivación, modelo fallback o proceso manual alternativo con tiempos de activación definidos."
+          },
+          {
+            title: "Cierre y reporte",
+            detail: "Informe de hallazgos, plan de mejoramiento con responsables y fechas, envío a ente de control según cronograma."
+          }
+        ],
+        legal: "EU AI Act Anexo IV · NIST AI RMF MAP 1.5 · Decreto 1081/2015 Colombia"
+      }
+    ]
+  },
+
+  /* Módulo: Herramientas */
+  tools: {
+    categories: [
+      {
+        label: "Monitoreo de modelos en producción",
+        items: [
+          { icon: "📡", name: "Evidently AI",   desc: "Data drift, model performance, dataset statistics.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🌊", name: "Arize AI",        desc: "Observabilidad ML en producción. Alertas de drift y fairness.", tag: "saas", tagLabel: "SaaS" },
+          { icon: "📊", name: "MLflow",           desc: "Tracking de experimentos, versionado, model registry.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🔭", name: "Fiddler AI",       desc: "Explicabilidad, monitoring y cumplimiento enterprise.", tag: "ent", tagLabel: "Enterprise" }
+        ]
+      },
+      {
+        label: "Explicabilidad e interpretabilidad (XAI)",
+        items: [
+          { icon: "🔍", name: "SHAP",             desc: "Valores Shapley para explicar cualquier modelo ML.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🍋", name: "LIME",             desc: "Aproximaciones locales interpretables para clasificadores.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🛡️", name: "IBM AI Fairness 360", desc: "Suite completa de métricas de fairness y mitigación de sesgos.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🧪", name: "Alibi Explain",    desc: "Counterfactuals, anchors, integrated gradients para XAI.", tag: "oss", tagLabel: "Open source" }
+        ]
+      },
+      {
+        label: "Gobierno y documentación normativa",
+        items: [
+          { icon: "📋", name: "Model Cards Toolkit", desc: "Documentación estándar de modelos IA (Google). Incluye fairness.", tag: "oss", tagLabel: "Open source" },
+          { icon: "🗂️", name: "Datasheets for Datasets", desc: "Plantilla de documentación de datasets para trazabilidad.", tag: "std", tagLabel: "Estándar" },
+          { icon: "⚖️", name: "LF AI ONNX Audit",  desc: "Framework de auditoría técnica para modelos IA en sector público.", tag: "std", tagLabel: "Regulatorio" },
+          { icon: "🔐", name: "PrivacyRaven",      desc: "Pruebas de privacidad: membership inference, model extraction.", tag: "oss", tagLabel: "Open source" }
+        ]
+      }
+    ]
+  },
+
+  /* Módulo: Checklist */
+  checklist: {
+    alert: {
+      type: "info",
+      title: "Guía de auditoría interna",
+      text: "Marca cada control implementado. Recomendado para auditorías trimestrales de sistemas IA de alto impacto."
+    },
+    categories: [
+      {
+        label: "Gobernanza y documentación",
+        items: [
+          "Existe política institucional de uso ético de IA aprobada por alta dirección",
+          "Todos los sistemas IA en producción tienen Model Card actualizada",
+          "Inventario de sistemas IA clasificados por nivel de riesgo (alto / limitado / mínimo)",
+          "Designado responsable de IA con funciones formalmente definidas"
+        ]
+      },
+      {
+        label: "Transparencia y explicabilidad",
+        items: [
+          "Mecanismo de explicación disponible para ciudadanos afectados por decisiones automatizadas",
+          "Logs de decisiones automatizadas almacenados y accesibles para auditoría (mín. 5 años)",
+          "Publicada información sobre uso de IA en trámites que afectan a ciudadanos"
+        ]
+      },
+      {
+        label: "Equidad y no discriminación",
+        items: [
+          "Evaluación de sesgos realizada antes del despliegue de cada modelo",
+          "Métricas de fairness monitoreadas mensualmente en producción",
+          "Protocolo de remediación ante detección de sesgo algorítmico documentado"
+        ]
+      },
+      {
+        label: "Privacidad y seguridad",
+        items: [
+          "DPIA/EIPD realizada para sistemas que procesan datos personales en IA",
+          "Pruebas de seguridad (adversarial, model extraction) realizadas en últimos 12 meses",
+          "Controles de anonimización/seudonimización en datos de entrenamiento"
+        ]
+      },
+      {
+        label: "Monitoreo continuo",
+        items: [
+          "Sistema de alertas tempranas configurado para model drift (PSI, KS, performance)",
+          "Proceso definido para reentrenamiento y redeployment de modelos",
+          "Revisión humana efectiva (Human-in-the-Loop) en decisiones de alto impacto"
+        ]
+      }
+    ]
+  }
+
+}; /* ← FIN DE CONFIG */
+</script>
+
+<!-- ============================================================
+     MOTOR DE RENDER — No tocar
+     ============================================================ -->
+<script>
+/* ── Utilidades ──────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const el = (tag, cls, html) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+};
+
+/* ── RENDER SIDEBAR ──────────────────────────────────────────── */
+function renderSidebar() {
+  const nav = $('nav-container');
+  const divTitle = el('div', 'nav-section-title', CONFIG.app.title);
+  nav.appendChild(divTitle);
+  CONFIG.modules.forEach(mod => {
+    const item = el('div', 'nav-item', `
+      <span class="ni-icon">${mod.icon}</span>
+      <span>${mod.label}</span>
+      ${mod.badge ? `<span class="nav-badge ${mod.badgeType === 'danger' ? '' : 'ok'}">${mod.badge}</span>` : ''}
+    `);
+    item.dataset.id = mod.id;
+    item.addEventListener('click', () => showSection(mod.id));
+    nav.appendChild(item);
+  });
+}
+
+/* ── SHOW SECTION ────────────────────────────────────────────── */
+function showSection(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const section = $('section-' + id);
+  if (section) section.classList.add('active');
+  const navItem = document.querySelector(`.nav-item[data-id="${id}"]`);
+  if (navItem) navItem.classList.add('active');
+  if (window.innerWidth <= 768) $('sidebar').classList.remove('open');
+}
+
+/* ── RENDER SECTIONS ─────────────────────────────────────────── */
+function renderSections() {
+  const container = $('sections-container');
+  CONFIG.modules.forEach(mod => {
+    const section = el('div', 'page-section');
+    section.id = 'section-' + mod.id;
+    const modData = CONFIG[mod.type] || CONFIG[mod.id];
+    const modConfig = mod;
+    section.innerHTML = `
+      <div class="page-header">
+        <h1>${mod.icon} ${mod.label}</h1>
+        <p>${mod.description}</p>
+        <div class="ph-meta">
+          <span class="ph-tag">${CONFIG.app.lastUpdate}</span>
+          <span class="ph-tag">${CONFIG.app.org}</span>
+        </div>
+      </div>
+    `;
+    // Render según tipo
+    const body = renderModuleBody(mod.type, mod.id, modData);
+    section.appendChild(body);
+    container.appendChild(section);
+  });
+}
+
+function renderModuleBody(type, id, data) {
+  const wrap = el('div');
+  if (!data) { wrap.innerHTML = '<p style="color:var(--text3)">Sin datos configurados.</p>'; return wrap; }
+
+  switch (type) {
+    case 'regulatory': renderRegulatory(wrap, data); break;
+    case 'risks':      renderRisks(wrap, data);      break;
+    case 'indicators': renderIndicators(wrap, data); break;
+    case 'playbooks':  renderPlaybooks(wrap, data);  break;
+    case 'tools':      renderTools(wrap, data);      break;
+    case 'checklist':  renderChecklist(wrap, data);  break;
+    default: wrap.innerHTML = '<p style="color:var(--text3)">Tipo de módulo no soportado.</p>';
+  }
+  return wrap;
+}
+
+/* ── RENDERERS POR TIPO ──────────────────────────────────────── */
+
+function renderAlert(data) {
+  const icons = { ok:'✅', warn:'⚠️', danger:'🚨', info:'ℹ️' };
+  const classes = { ok:'alert-ok', warn:'alert-warn', danger:'alert-danger', info:'alert-info' };
+  return `<div class="alert ${classes[data.type]||'alert-info'}">
+    <div class="alert-icon">${icons[data.type]||'ℹ️'}</div>
+    <div><h4>${data.title}</h4><p>${data.text}</p></div>
+  </div>`;
+}
+
+function renderRegulatory(wrap, data) {
+  if (data.alert) wrap.innerHTML += renderAlert(data.alert);
+  // Frameworks grid
+  wrap.innerHTML += '<div class="section-label">Marco regulatorio por jurisdicción</div>';
+  const grid = el('div', 'reg-grid');
+  data.frameworks.forEach(f => {
+    const card = el('div', 'reg-card');
+    card.innerHTML = `
+      <div class="rc-flag">${f.flag}</div>
+      <h4>${f.name}</h4>
+      <p>${f.description}</p>
+      <span class="reg-level" style="background:${f.levelBg};color:${f.levelColor}">${f.level}</span>
+    `;
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+  // Dimensions
+  wrap.innerHTML += '<div class="section-label">Dimensiones clave de cumplimiento</div>';
+  const dGrid = el('div', 'card-grid');
+  data.dimensions.forEach(d => {
+    const card = el('div', 'card');
+    card.innerHTML = `
+      <div class="card-icon" style="background:${d.iconBg}">${d.icon}</div>
+      <h3>${d.title}</h3>
+      <p>${d.text}</p>
+    `;
+    dGrid.appendChild(card);
+  });
+  wrap.appendChild(dGrid);
+}
+
+function renderRisks(wrap, data) {
+  if (data.alert) wrap.innerHTML += renderAlert(data.alert);
+  // Heatmap
+  wrap.innerHTML += '<div class="section-label">Heatmap de riesgo · Probabilidad × Impacto</div>';
+  const hmWrap = el('div', 'heatmap-wrap');
+  const cols = data.heatmap.cols.length;
+  const hm = el('div', 'heatmap');
+  hm.style.gridTemplateColumns = `100px repeat(${cols}, 1fr)`;
+  hm.innerHTML = `<div class="hm-cell" style="background:transparent"></div>`;
+  data.heatmap.cols.forEach(c => { hm.innerHTML += `<div class="hm-header">${c}</div>`; });
+  data.heatmap.rows.forEach(row => {
+    hm.innerHTML += `<div class="hm-label">${row.label}</div>`;
+    row.cells.forEach((cls, i) => {
+      const val = i + 1;
+      hm.innerHTML += `<div class="hm-cell ${cls}">${val}</div>`;
+    });
+  });
+  hmWrap.appendChild(hm);
+  wrap.appendChild(hmWrap);
+  // Risk cards
+  wrap.innerHTML += '<div class="section-label">Riesgos identificados</div>';
+  const grid = el('div', 'card-grid');
+  data.items.forEach(r => {
+    const card = el('div', 'card');
+    card.innerHTML = `
+      <span class="badge badge-${r.badge}">${r.badgeLabel}</span>
+      <h3 style="margin-top:.3rem">${r.title}</h3>
+      <p>${r.text}</p>
+    `;
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+}
+
+function renderIndicators(wrap, data) {
+  // Stats
+  const statsRow = el('div', 'stats-row');
+  data.stats.forEach(s => {
+    statsRow.innerHTML += `<div class="stat-box"><div class="sv">${s.value}</div><div class="sl">${s.label}</div></div>`;
+  });
+  wrap.appendChild(statsRow);
+  // Alerts
+  (data.alerts || []).forEach(a => { wrap.innerHTML += renderAlert(a); });
+  // Indicators list
+  wrap.innerHTML += '<div class="section-label">Indicadores de cumplimiento</div>';
+  const list = el('div', 'indicator-list');
+  data.items.forEach(item => {
+    const row = el('div', 'ind-row');
+    row.innerHTML = `
+      <div>
+        <div class="ind-name">${item.name}</div>
+        <div class="ind-desc">${item.desc}</div>
+        <div class="ind-bar-wrap"><div class="ind-bar" style="width:${item.numericValue}%;background:${item.color}"></div></div>
+      </div>
+      <div class="ind-value" style="color:${item.color}">${item.value}</div>
+    `;
+    list.appendChild(row);
+  });
+  wrap.appendChild(list);
+}
+
+function renderPlaybooks(wrap, data) {
+  wrap.innerHTML += '<div class="section-label">Protocolos de respuesta a incidentes</div>';
+  const acc = el('div', 'accordion');
+  data.items.forEach((pb, idx) => {
+    const item = el('div', 'acc-item');
+    item.innerHTML = `
+      <div class="acc-head" onclick="toggleAcc(this)">
+        <span class="ah-icon">${pb.icon}</span>
+        <h3>${pb.title}</h3>
+        <span class="ah-badge badge badge-info">${pb.badge}</span>
+        <span class="acc-arrow">▾</span>
+      </div>
+      <div class="acc-body">
+        ${pb.steps.map((s, i) => `
+          <div class="acc-step">
+            <div class="acc-step-num">${i + 1}</div>
+            <div class="acc-step-body">
+              <h5>${s.title}</h5>
+              <p>${s.detail}</p>
+            </div>
+          </div>
+        `).join('')}
+        <div class="acc-legal">📌 Marcos aplicables: ${pb.legal}</div>
+      </div>
+    `;
+    acc.appendChild(item);
+  });
+  wrap.appendChild(acc);
+}
+
+function renderTools(wrap, data) {
+  data.categories.forEach(cat => {
+    wrap.innerHTML += `<div class="section-label">${cat.label}</div>`;
+    const grid = el('div', 'tool-grid');
+    cat.items.forEach(t => {
+      const tagClasses = { oss:'tag-oss', saas:'tag-saas', ent:'tag-ent', std:'tag-std' };
+      grid.innerHTML += `
+        <div class="tool-card">
+          <div class="tc-icon">${t.icon}</div>
+          <h4>${t.name}</h4>
+          <p>${t.desc}</p>
+          <span class="tool-tag ${tagClasses[t.tag]||'tag-std'}">${t.tagLabel}</span>
+        </div>
+      `;
+    });
+    wrap.appendChild(grid);
+  });
+}
+
+function renderChecklist(wrap, data) {
+  if (data.alert) wrap.innerHTML += renderAlert(data.alert);
+  // Progress
+  const totalItems = data.categories.reduce((acc, cat) => acc + cat.items.length, 0);
+  wrap.innerHTML += `
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+      <span>Controles verificados</span>
+      <span id="cl-label">0 / ${totalItems}</span>
+    </div>
+    <div class="cl-progress-bar"><div class="cl-progress-fill" id="cl-fill" style="width:0%"></div></div>
+  `;
+  const clWrap = el('div', 'checklist-wrap');
+  let checkIdx = 0;
+  data.categories.forEach(cat => {
+    clWrap.innerHTML += `<div class="cl-category">${cat.label}</div>`;
+    cat.items.forEach(item => {
+      const clItem = el('div', 'cl-item');
+      clItem.innerHTML = `
+        <input type="checkbox" id="cl-${checkIdx}" onchange="updateChecklist()">
+        <label for="cl-${checkIdx}">${item}</label>
+      `;
+      clWrap.appendChild(clItem);
+      checkIdx++;
+    });
+  });
+  wrap.appendChild(clWrap);
+  // Buttons
+  const btns = el('div', '', `
+    <button class="btn btn-secondary" style="margin-right:8px" onclick="resetChecklist()">Reiniciar</button>
+  `);
+  wrap.appendChild(btns);
+}
+
+/* ── INTERACCIONES ───────────────────────────────────────────── */
+function toggleAcc(head) {
+  head.closest('.acc-item').classList.toggle('open');
+}
+function updateChecklist() {
+  const checks = document.querySelectorAll('[id^="cl-"]');
+  const done = [...checks].filter(c => c.checked).length;
+  const total = checks.length;
+  const pct = Math.round(done / total * 100);
+  const fill = $('cl-fill');
+  const label = $('cl-label');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = `${done} / ${total}`;
+  checks.forEach(c => {
+    c.closest('.cl-item').classList.toggle('checked', c.checked);
+  });
+}
+function resetChecklist() {
+  document.querySelectorAll('[id^="cl-"]').forEach(c => { c.checked = false; });
+  updateChecklist();
+}
+function toggleSidebar() {
+  $('sidebar').classList.toggle('open');
+}
+
+/* ── ADMIN PANEL ─────────────────────────────────────────────── */
+function openAdmin() {
+  buildAdminPanel();
+  $('admin-overlay').classList.add('open');
+}
+function closeAdmin() {
+  $('admin-overlay').classList.remove('open');
+}
+function closeAdminOutside(e) {
+  if (e.target === $('admin-overlay')) closeAdmin();
+}
+
+function buildAdminPanel() {
+  const tabs = $('ap-tabs');
+  const pages = $('ap-pages');
+  tabs.innerHTML = '';
+  pages.innerHTML = '';
+
+  const adminSections = [
+    { id: 'general', label: '⚙️ General' },
+    { id: 'modulos', label: '📦 Módulos' },
+    { id: 'indicadores', label: '📊 KPIs' },
+    { id: 'checklist', label: '✅ Checklist' },
+    { id: 'avanzado', label: '🔧 Avanzado' }
+  ];
+
+  adminSections.forEach((s, i) => {
+    const tab = el('button', `ap-tab${i === 0 ? ' active' : ''}`, s.label);
+    tab.onclick = () => switchApTab(s.id);
+    tabs.appendChild(tab);
+
+    const page = el('div', `ap-page${i === 0 ? ' active' : ''}`);
+    page.id = 'ap-' + s.id;
+    page.appendChild(buildAdminPage(s.id));
+    pages.appendChild(page);
+  });
+}
+
+function switchApTab(id) {
+  document.querySelectorAll('.ap-tab').forEach((t, i) => {
+    t.classList.toggle('active', t.textContent.includes(
+      { general:'General', modulos:'Módulos', indicadores:'KPIs', checklist:'Checklist', avanzado:'Avanzado' }[id]
+    ));
+  });
+  document.querySelectorAll('.ap-page').forEach(p => p.classList.remove('active'));
+  $('ap-' + id).classList.add('active');
+}
+
+function buildAdminPage(id) {
+  const wrap = el('div');
+  if (id === 'general') {
+    wrap.innerHTML = `
+      <div class="ap-info">💡 Edita la información general de la aplicación. Los cambios se aplican al recargar la sección.</div>
+      <div class="form-group"><label>Nombre de la app</label>
+        <input id="cfg-title" value="${CONFIG.app.title}">
+      </div>
+      <div class="form-group"><label>Subtítulo</label>
+        <input id="cfg-subtitle" value="${CONFIG.app.subtitle}">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Organización</label>
+          <input id="cfg-org" value="${CONFIG.app.org}">
+        </div>
+        <div class="form-group"><label>Última actualización</label>
+          <input id="cfg-update" value="${CONFIG.app.lastUpdate}">
+        </div>
+      </div>
+      <div class="ap-actions">
+        <button class="btn btn-secondary" onclick="closeAdmin()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveGeneral()">Guardar cambios</button>
+      </div>
+    `;
+  } else if (id === 'modulos') {
+    wrap.innerHTML = `<div class="ap-info">💡 Activa o desactiva módulos y edita sus etiquetas. Los cambios se aplican al hacer clic en Guardar.</div>`;
+    const list = el('div', 'ap-list');
+    CONFIG.modules.forEach((mod, i) => {
+      list.innerHTML += `
+        <div class="ap-list-item">
+          <span>${mod.icon}</span>
+          <input value="${mod.label}" id="mod-label-${i}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px">
+          <span style="font-size:11px;color:var(--text3);padding:0 6px">${mod.type}</span>
+        </div>
+      `;
+    });
+    wrap.appendChild(list);
+    const actions = el('div', 'ap-actions');
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeAdmin()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModules()">Guardar cambios</button>
+    `;
+    wrap.appendChild(actions);
+  } else if (id === 'indicadores') {
+    wrap.innerHTML = `<div class="ap-info">💡 Edita los valores actuales de los KPIs. El valor numérico (0–100) controla la barra de progreso.</div>`;
+    const list = el('div', 'ap-list');
+    CONFIG.indicators.items.forEach((item, i) => {
+      list.innerHTML += `
+        <div class="ap-list-item" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div style="font-size:12px;font-weight:500">${item.name}</div>
+          <div style="display:flex;gap:8px;width:100%">
+            <input value="${item.value}" id="kpi-val-${i}" placeholder="Valor display" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px">
+            <input type="number" value="${item.numericValue}" id="kpi-num-${i}" min="0" max="100" placeholder="% barra" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px">
+          </div>
+        </div>
+      `;
+    });
+    wrap.appendChild(list);
+    const actions = el('div', 'ap-actions');
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeAdmin()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveIndicators()">Guardar y re-renderizar</button>
+    `;
+    wrap.appendChild(actions);
+  } else if (id === 'checklist') {
+    wrap.innerHTML = `<div class="ap-info">💡 Añade, edita o elimina ítems del checklist. Los cambios se reflejan al guardar.</div>`;
+    CONFIG.checklist.categories.forEach((cat, ci) => {
+      const catWrap = el('div', '', `<div style="font-size:12px;font-weight:600;margin:.75rem 0 .25rem;color:var(--text2)">${cat.label}</div>`);
+      const list = el('div', 'ap-list');
+      cat.items.forEach((item, ii) => {
+        list.innerHTML += `
+          <div class="ap-list-item">
+            <input value="${item}" id="cl-edit-${ci}-${ii}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px">
+            <button onclick="removeCheckItem(${ci},${ii})">🗑</button>
+          </div>
+        `;
+      });
+      catWrap.appendChild(list);
+      catWrap.innerHTML += `<button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;margin-top:4px" onclick="addCheckItem(${ci})">+ Añadir ítem</button>`;
+      wrap.appendChild(catWrap);
+    });
+    const actions = el('div', 'ap-actions');
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeAdmin()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveChecklist()">Guardar y re-renderizar</button>
+    `;
+    wrap.appendChild(actions);
+  } else if (id === 'avanzado') {
+    wrap.innerHTML = `
+      <div class="ap-info">🔧 Edita el JSON completo de configuración. Útil para cambios masivos o importar datos externos. <strong>Valida el JSON antes de guardar.</strong></div>
+      <textarea class="json-editor" id="json-editor">${JSON.stringify(CONFIG, null, 2)}</textarea>
+      <div class="ap-actions" style="margin-top:.75rem">
+        <button class="btn btn-secondary" onclick="closeAdmin()">Cancelar</button>
+        <button class="btn btn-danger" onclick="validateJSON()">Validar JSON</button>
+        <button class="btn btn-primary" onclick="applyJSON()">Aplicar JSON completo</button>
+      </div>
+    `;
+  }
+  return wrap;
+}
+
+/* ── GUARDAR CAMBIOS ADMIN ───────────────────────────────────── */
+function saveGeneral() {
+  CONFIG.app.title = $('cfg-title').value;
+  CONFIG.app.subtitle = $('cfg-subtitle').value;
+  CONFIG.app.org = $('cfg-org').value;
+  CONFIG.app.lastUpdate = $('cfg-update').value;
+  updateHeaderMeta();
+  closeAdmin();
+  showToast('✅ Información general actualizada');
+}
+
+function saveModules() {
+  CONFIG.modules.forEach((mod, i) => {
+    const inp = $(`mod-label-${i}`);
+    if (inp) mod.label = inp.value;
+  });
+  $('nav-container').innerHTML = '';
+  renderSidebar();
+  showToast('✅ Módulos actualizados');
+  closeAdmin();
+}
+
+function saveIndicators() {
+  CONFIG.indicators.items.forEach((item, i) => {
+    const val = $(`kpi-val-${i}`);
+    const num = $(`kpi-num-${i}`);
+    if (val) item.value = val.value;
+    if (num) item.numericValue = parseInt(num.value) || 0;
+  });
+  rerenderSection('indicadores');
+  closeAdmin();
+  showToast('✅ KPIs actualizados');
+}
+
+function saveChecklist() {
+  CONFIG.checklist.categories.forEach((cat, ci) => {
+    cat.items = cat.items.map((_, ii) => {
+      const inp = $(`cl-edit-${ci}-${ii}`);
+      return inp ? inp.value : _;
+    }).filter(Boolean);
+  });
+  rerenderSection('checklist');
+  closeAdmin();
+  showToast('✅ Checklist actualizado');
+}
+
+function addCheckItem(ci) {
+  const newItem = prompt('Nuevo ítem del checklist:');
+  if (newItem && newItem.trim()) {
+    CONFIG.checklist.categories[ci].items.push(newItem.trim());
+    buildAdminPanel();
+    switchApTab('checklist');
+  }
+}
+
+function removeCheckItem(ci, ii) {
+  CONFIG.checklist.categories[ci].items.splice(ii, 1);
+  buildAdminPanel();
+  switchApTab('checklist');
+}
+
+function validateJSON() {
+  try {
+    JSON.parse($('json-editor').value);
+    showToast('✅ JSON válido');
+  } catch(e) {
+    alert('❌ JSON inválido: ' + e.message);
+  }
+}
+
+function applyJSON() {
+  try {
+    const newConfig = JSON.parse($('json-editor').value);
+    Object.assign(CONFIG, newConfig);
+    location.reload();
+  } catch(e) {
+    alert('❌ Error al aplicar JSON: ' + e.message);
+  }
+}
+
+function rerenderSection(moduleId) {
+  const mod = CONFIG.modules.find(m => m.id === moduleId);
+  if (!mod) return;
+  const section = $('section-' + moduleId);
+  if (!section) return;
+  const data = CONFIG[mod.type] || CONFIG[mod.id];
+  // Limpiar body excepto el page-header
+  const header = section.querySelector('.page-header');
+  section.innerHTML = '';
+  if (header) section.appendChild(header);
+  const body = renderModuleBody(mod.type, mod.id, data);
+  section.appendChild(body);
+}
+
+/* ── TOAST NOTIFICACION ──────────────────────────────────────── */
+function showToast(msg) {
+  const t = el('div', '', msg);
+  Object.assign(t.style, {
+    position:'fixed', bottom:'1.5rem', left:'50%', transform:'translateX(-50%)',
+    background:'var(--accent)', color:'#fff',
+    padding:'.625rem 1.25rem', borderRadius:'8px',
+    fontSize:'13px', fontWeight:'500',
+    boxShadow:'0 4px 16px rgba(0,0,0,.18)',
+    zIndex:'999', transition:'opacity .3s'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2400);
+}
+
+function updateHeaderMeta() {
+  $('header-meta').innerHTML = `${CONFIG.app.lastUpdate} · ${CONFIG.app.org}`;
+}
+
+/* ── INIT ────────────────────────────────────────────────────── */
+function init() {
+  renderSidebar();
+  renderSections();
+  updateHeaderMeta();
+  // Activar primer módulo
+  if (CONFIG.modules.length > 0) {
+    showSection(CONFIG.modules[0].id);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
